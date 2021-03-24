@@ -1,0 +1,53 @@
+app-id: io.github.plexinc.PlexMediaPlayer
+runtime: org.kde.Platform
+runtime-version: '5.9'
+sdk: org.kde.Sdk
+command: plexmediaplayer
+rename-icon: plexmediaplayer
+rename-desktop-file: plexmediaplayer.desktop
+build-options:
+  build-args:
+    - --share=network
+finish-args:
+  - --socket=pulseaudio
+  - --share=network
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --filesystem=host
+  - --device=dri
+modules:
+  - name: fribidi
+    buildsystem: simple
+    build-commands:
+      - ./autogen.sh
+      - ./configure --prefix=/app
+      - make install
+    sources:
+      - type: git
+        url: https://github.com/fribidi/fribidi.git
+  - name: mpv
+    buildsystem: simple
+    build-commands:
+      - sed -i 's/\.\/configure/FRIBIDI_LIBS="-lfribidi" .\/configure --enable-static/g' scripts/libass-config
+      - echo --enable-libmpv-shared > mpv_options
+      - echo --disable-cplayer >> mpv_options
+      - echo --prefix=/app >> mpv_options
+      - head -n 5 scripts/mpv-config > scripts/mpv-config1
+      - tail -n +6 scripts/mpv-config > scripts/mpv-config2
+      - >
+          echo "sed -i 's/Libs: /Libs: -lfribidi /g' \$BUILD/build_libs/lib/pkgconfig/libass.pc" | cat scripts/mpv-config1 - scripts/mpv-config2 > scripts/mpv-config
+      - ./rebuild -j4
+      - ./install
+    sources:
+      - type: git
+        url: https://github.com/mpv-player/mpv-build.git
+  - name: plexmediaserver
+    buildsystem: cmake
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DQTROOT=/usr
+      - -DCMAKE_INSTALL_PREFIX=/app
+    sources:
+      - type: git
+        url: https://github.com/plexinc/plex-media-player.git
