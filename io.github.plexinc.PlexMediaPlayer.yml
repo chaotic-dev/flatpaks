@@ -26,22 +26,19 @@ modules:
     sources:
       - type: git
         url: https://github.com/fribidi/fribidi.git
+        tag: v1.0.9
   - name: mpv
     buildsystem: simple
     build-commands:
-      - sed -i 's/\.\/configure/FRIBIDI_LIBS="-lfribidi" .\/configure --enable-static/g' scripts/libass-config
       - echo --enable-libmpv-shared > mpv_options
       - echo --disable-cplayer >> mpv_options
       - echo --prefix=/app >> mpv_options
-      - head -n 5 scripts/mpv-config > scripts/mpv-config1
-      - tail -n +6 scripts/mpv-config > scripts/mpv-config2
-      - >
-          echo "sed -i 's/Libs: /Libs: -lfribidi /g' \$BUILD/build_libs/lib/pkgconfig/libass.pc" | cat scripts/mpv-config1 - scripts/mpv-config2 > scripts/mpv-config
       - ./rebuild -j4
       - ./install
     sources:
       - type: git
         url: https://github.com/mpv-player/mpv-build.git
+        commit: 836df3589b47ab689411c3949cb699c8f2038914
   - name: plexmediaserver
     buildsystem: cmake
     config-opts:
